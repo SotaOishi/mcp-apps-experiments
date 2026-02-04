@@ -18,6 +18,14 @@ pnpm dev
 
 Viteでフロントエンド(`mcp-app.html`)をビルドした後、MCPサーバーが `http://localhost:3001/mcp` で起動します。
 
+### Cloudflare Tunnel で一時的な URL を発行
+
+```bash
+pnpm dlx cloudflared tunnel --url http://localhost:3001
+```
+
+発行されたURLをClaudeなどに登録(例: https://xxx.trycloudflare.com/mcp)
+
 ### 個別実行
 
 ```bash
