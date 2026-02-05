@@ -11,18 +11,15 @@ import {
   XAxis,
   YAxis,
 } from "recharts";
+import type { Company } from "../../shared/companySchema";
+import { structuredCompaniesSchema } from "../../shared/companySchema";
 
-interface YearlyData {
-  year: number;
-  sales: number;
-  operatingProfit: number;
-  cash: number;
-  employees: number;
-}
-
-interface Company {
-  name: string;
-  data: YearlyData[];
+function extractCompaniesFromStructuredContent(value: unknown): Company[] {
+  const list = structuredCompaniesSchema.safeParse(value);
+  if (list.success) {
+    return list.data.companies;
+  }
+  return [];
 }
 
 function formatNumber(num: number): string {
@@ -56,32 +53,23 @@ export function CompanyDashboardInner({
   const [similarLoaded, setSimilarLoaded] = useState(false);
 
   useEffect(() => {
-    if (toolResult) {
-      const textContent = toolResult.content?.find((c) => c.type === "text");
-      if (textContent?.text) {
-        try {
-          const parsed = JSON.parse(textContent.text);
-          // get-avocado-company-data returns a single object, not an array
-          if (Array.isArray(parsed)) {
-            setCompanies(parsed);
-          } else {
-            setCompanies([parsed]);
-          }
-        } catch (e) {
-          console.error("Failed to parse tool result:", e);
-        }
-      }
+    const structuredCompanies = extractCompaniesFromStructuredContent(
+      toolResult?.structuredContent,
+    );
+    if (structuredCompanies.length > 0) {
+      setCompanies(structuredCompanies);
+      return;
     }
   }, [toolResult]);
 
   const handleGetSimilarCompanies = useCallback(async () => {
     try {
       const result = await app.callServerTool({ name: "get-similar-companies", arguments: {} });
-      const textContent = result.content?.find((c) => c.type === "text");
-      if (textContent?.text) {
-        const similarCompanies: Company[] = JSON.parse(textContent.text);
-        setCompanies((prev) => [...prev, ...similarCompanies]);
+      const structuredCompanies = extractCompaniesFromStructuredContent(result.structuredContent);
+      if (structuredCompanies.length > 0) {
+        setCompanies((prev) => [...prev, ...structuredCompanies]);
         setSimilarLoaded(true);
+        return;
       }
     } catch (e) {
       console.error(e);
@@ -105,6 +93,8 @@ export function CompanyDashboardInner({
   const handleCompanyHP = useCallback(async () => {
     await app.openLink({ url: "https://github.com/SotaOishi/mcp-apps-experiments" });
   }, [app]);
+
+  console.log(companies);
 
   return (
     <main

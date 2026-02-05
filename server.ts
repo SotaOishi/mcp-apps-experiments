@@ -10,6 +10,7 @@ import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { StreamableHTTPServerTransport } from "@modelcontextprotocol/sdk/server/streamableHttp.js";
 import cors from "cors";
 import express from "express";
+import { companiesSchema } from "./shared/companySchema";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
@@ -27,6 +28,7 @@ registerAppTool(
     title: "Get Avocado Company Data",
     description: "Returns Avocado Company data.",
     inputSchema: {},
+    outputSchema: { companies: companiesSchema },
     _meta: { ui: { resourceUri } },
   },
   async () => {
@@ -42,7 +44,8 @@ registerAppTool(
     };
 
     return {
-      content: [{ type: "text", text: JSON.stringify(company) }],
+      structuredContent: { companies: [company] },
+      content: [{ type: "text", text: JSON.stringify({ companies: [company] }) }],
     };
   },
 );
@@ -54,6 +57,7 @@ registerAppTool(
     title: "Get Companies",
     description: "Returns 5 years of data for 3 fictional companies.",
     inputSchema: {},
+    outputSchema: { companies: companiesSchema },
     _meta: { ui: { resourceUri } },
   },
   async () => {
@@ -80,7 +84,8 @@ registerAppTool(
       },
     ];
     return {
-      content: [{ type: "text", text: JSON.stringify(companies) }],
+      structuredContent: { companies },
+      content: [{ type: "text", text: JSON.stringify({ companies }) }],
     };
   },
 );
